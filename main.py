@@ -171,7 +171,7 @@ Articles:
     result = {}
     result['query_eng'] = markdown_content = response.choices[0].message.content.strip()
 
-    html_body = markdown.markdown(markdown_content)
+    html_body = markdown.markdown(markdown_content, extensions=['nl2br'])
     html = f"""
     <html>
     <head>
