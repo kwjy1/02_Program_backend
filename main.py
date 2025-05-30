@@ -1,13 +1,17 @@
+import os
 import toml
 import requests
 from datetime import datetime, timezone, timedelta
 
 import openai
 from newsapi import NewsApiClient
+import markdown
 
 
 with open("secret_keys.toml", "r", encoding="utf-8") as f:
     secrets = toml.load(f)
+
+output_dir = "output_html"
 
 openai.api_key = secrets["api_key_openai"]
 api_key_newsapi = secrets["api_key_newsapi"]
@@ -69,7 +73,7 @@ def get_eng_query(query_eng, start_date=start_date, end_date=end_date):
         "q": query_eng,
         "from_param": start_date,
         "to": end_date,
-        "pageSize": 100,
+        "page_size": 100,
     }
 
     articles = newasapi.get_everything(**params)
@@ -78,8 +82,109 @@ def get_eng_query(query_eng, start_date=start_date, end_date=end_date):
     return number_of_articles, articles["articles"]
 
 
+index_html = """
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>기술별 뉴스 요약</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+    <h1 class="mb-4">기술별 뉴스 요약</h1>
+    <ul class="list-group">
+"""
 
-for query in presets:
-    query_kor, query_eng = presets[query]
+system_context = """
+You are an expert assistant for National Strategy Technology policy, you will carefully read them and produce a concise summary.
+"""
 
-    get_kor_query(query_kor, days=1, display=100, sort='sim')
+for tech, (_, query_eng) in presets.items():
+    index_html += f'<li class="list-group-item"><a href="{query_eng}.html">{tech} ({query_eng})</a></li>\n'
+
+index_html += """
+    </ul>
+</body>
+</html>
+"""
+
+with open(os.path.join(output_dir, "index.html"), "w", encoding="utf-8") as f:
+    f.write(index_html)
+
+for query_kor, query_eng in presets.values():
+    print(f"Processing: {query_kor} / {query_eng}")
+    number_of_article_kor, article_kor = get_kor_query(query_kor, days=1, display=100, sort='sim')
+    number_of_article_eng, article_eng = get_eng_query(query_eng, start_date=start_date, end_date=end_date)
+
+    articles_text = ""
+    for i, article in enumerate(article_kor, 1):
+        # print(type(article))
+        # print(article['link'])
+        articles_text += (
+            f"{i}. Title: {article['title']}\n"
+            f"   Description: {article['description']}\n"
+            f"   URL: {article['link']}\n\n"
+        )
+        count = i
+
+    for i, article in enumerate(article_eng, count):
+        articles_text += (
+            f"{i}. Title: {article['title']}\n"
+            f"   Description: {article['description']}\n"
+            f"   URL: {article['url']}\n\n"
+        )
+
+    prompt = f"""
+Group the news articles below into 3~5 major issues (depending on the number of articles) and summarize each issue.
+Use a mix of Korean and international news, and you can exclude unnecessary articles.
+
+0. Be written in KOREAN
+1. **Topic Title**: 10-20 words.
+2. **Summary**: 4-5 sentence overview of the core theme and some specific content that article says.
+3. **Articles**: Markdown list of titles with URLs. and remove duplicate(or similar) articles
+
+Format exactly like this:
+
+## Topic 1: <Topic Title>
+**Summary:** ... \n
+**Articles:**
+- [Title A](URL) \n
+- [Title B](URL) \n
+
+Articles:
+{articles_text}
+"""
+ 
+    response = openai.ChatCompletion.create(
+        model = "gpt-4.1",
+        messages = [{"role": "system", "content": system_context},
+                    {"role": "user", "content": prompt}],
+        temperature=0.2,
+        max_tokens=32768,
+        top_p=1,
+        frequency_penalty=0,
+        presence_penalty=0,
+        response_format={
+            "type": "text"
+        }
+    )
+
+    result = {}
+    result['query_eng'] = markdown_content = response.choices[0].message.content.strip()
+
+    html_body = markdown.markdown(markdown_content)
+    html = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <title>{query_eng} 뉴스 요약</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head>
+    <body class="container py-4">
+        <h1 class="mb-4">{query_eng} 뉴스 요약</h1>
+        <a href="index.html" class="btn btn-secondary mb-3">← 메인으로</a>
+        <div class="card p-4">{html_body}</div>
+    </body>
+    </html>
+    """
+    with open(os.path.join(output_dir, f"{query_eng}.html"), "w", encoding="utf-8") as f:
+        f.write(html)
