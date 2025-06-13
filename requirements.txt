@@ -1,5 +1,6 @@
 toml
-requests
+requests==2.31.0
 openai
 newsapi-python
 markdown
+pandas==2.2.1
