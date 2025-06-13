@@ -12,29 +12,32 @@ with open("secret_keys.toml", "r", encoding="utf-8") as f:
     secrets = toml.load(f)
 
 output_dir = "output_html"
+os.makedirs(output_dir, exist_ok=True)
 
 openai.api_key = secrets["api_key_openai"]
 api_key_newsapi = secrets["api_key_newsapi"]
 api_key_naver_client_id = secrets["api_key_naver_client_id"]
 api_key_naver_client_secret = secrets["api_key_naver_client_secret"]
 
+# 바이오, 우주항공해양, 모빌리티, 차세대통신 가르마
+
 presets = {
     "AI": ("AI", "AI"),
     "반도체": ("반도체", "Semiconductor"),
-    "NPU": ("NPU", "NPU"),
     "디스플레이": ("디스플레이", "Display"),
     "이차전지": ("이차전지", "Secondary Battery"),
-    "자율주행": ("자율주행", "Autunomous Driving"),
-    "전기차": ("전기차 ", "EV"),
+    "자율주행": ("자율주행", "Autonomous Driving"),
+    "전기차": ("전기차", "EV"),
+    "UAM": ("UAM", "UAM"),
     "차세대원자력": ("원자력", "Nuclear Energy"),
     "바이오": ("바이오", "Biotechnology"),
+    "의약품": ("의약품", "Pharmaceuticals"),
+    "디지털헬스": ("디지털 헬스", "Digital Health"),
     "수소": ("수소", "Hydrogen"),
-    "SMR": ("SMR", "SMR"),
     "사이버보안": ("사이버보안", "Cybersecurity"),
     "6G": ("6G", "6G"),
     "로봇": ("로봇", "Robotics"),
     "양자": ("양자", "Quantum"),
-    "기후변화": ("기후변화", "Climate Change"),
 }
 
 # Set the date range for news articles
