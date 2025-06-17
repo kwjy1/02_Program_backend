@@ -3,4 +3,4 @@ requests==2.31.0
 openai==0.27.8
 newsapi-python
 markdown
-pandas==2.2.1
+pandas
