@@ -21,8 +21,7 @@ api_key_newsapi = secrets["api_key_newsapi"]
 api_key_naver_client_id = secrets["api_key_naver_client_id"]
 api_key_naver_client_secret = secrets["api_key_naver_client_secret"]
 
-# 바이오, 우주항공해양, 모빌리티, 차세대통신 가르마
-
+# Define the technology presets with their Korean and English names
 presets = {
     "AI": ("AI", "AI"),
     "반도체": ("반도체", "Semiconductor"),
@@ -31,6 +30,7 @@ presets = {
     "자율주행": ("자율주행", "Autonomous Driving"),
     "전기차": ("전기차", "EV"),
     "UAM": ("UAM", "UAM"),
+    "우주항공해양": ("우주 기술", "aerospace technology"),
     "차세대원자력": ("원자력", "Nuclear Energy"),
     "바이오": ("바이오", "Biotechnology"),
     "의약품": ("의약품", "Pharmaceuticals"),
