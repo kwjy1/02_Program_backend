@@ -205,12 +205,10 @@ def upload_to_s3(local_directory, bucket_name, s3_prefix=''):
             local_path = os.path.join(root, filename)
             relative_path = os.path.relpath(local_path, local_directory)
             s3_path = os.path.join(s3_prefix, relative_path)
-            
             try:
-                s3_client.upload_file(local_path, bucket_name, s3_path)
+                s3_client.upload_file(local_path, bucket_name, s3_path, ExtraArgs={'ContentType': 'text/html'})
                 print(f"Uploaded {local_path} to s3://{bucket_name}/{s3_path}")
             except ClientError as e:
                 print(f"Error uploading {local_path}: {e}")
-
 
 upload_to_s3(output_dir, 'tech-news-summary')
