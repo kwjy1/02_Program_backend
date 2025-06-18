@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 import json
+import toml
 from typing import List
 
 class AligoSMS:
@@ -29,10 +30,12 @@ class AligoSMS:
         return response.json()
 
 def main():
+    with open("secret_keys.toml", "r", encoding="utf-8") as f:
+        secrets = toml.load(f)
     # ALIGO API credentials - Replace these with your actual credentials
-    API_KEY = "apiKey"
-    USER_ID = "userId"
-    SENDER = "0"  # Must be registered in ALIGO
+    API_KEY = secrets["aligo_api_key"]
+    USER_ID = secrets['aligo_user_id']
+    SENDER = secrets['aligo_sender']  # Must be registered in ALIGO
 
     # Initialize SMS sender
     sms_sender = AligoSMS(API_KEY, USER_ID, SENDER)

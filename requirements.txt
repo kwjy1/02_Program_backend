@@ -4,3 +4,4 @@ openai==0.27.8
 newsapi-python
 markdown
 pandas
+boto3==1.34.34
