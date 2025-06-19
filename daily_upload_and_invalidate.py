@@ -13,7 +13,6 @@ def upload_to_s3(local_directory, bucket_name, s3_prefix=''):
     Upload a directory to S3 bucket
     """
     s3_client = boto3.client('s3')
-    html_paths = []
     
     for root, dirs, files in os.walk(local_directory):
         for filename in files:
@@ -23,20 +22,13 @@ def upload_to_s3(local_directory, bucket_name, s3_prefix=''):
             try:
                 s3_client.upload_file(local_path, bucket_name, s3_path, ExtraArgs={'ContentType': 'text/html'})
                 print(f"Uploaded {local_path} to s3://{bucket_name}/{s3_path}")
-                html_paths.append(f"/{s3_path}")
             except ClientError as e:
                 print(f"Error uploading {local_path}: {e}")
-
-    return html_paths
 
 updated_paths = upload_to_s3('output_html', secrets['s3_bucket_name'])
 
 # CloudFront 캐시 무효화
-def invalidate_cloudfront(distribution_id, paths):
-    if not paths:
-        print("⚠️ No paths to invalidate.")
-        return
-
+def invalidate_cloudfront(distribution_id):
     client = boto3.client('cloudfront')
     caller_ref = f"daily-invalidation-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
 
@@ -45,16 +37,15 @@ def invalidate_cloudfront(distribution_id, paths):
             DistributionId=distribution_id,
             InvalidationBatch={
                 'Paths': {
-                    'Quantity': len(paths),
-                    'Items': paths
+                    'Quantity': 1,
+                    'Items': ['/*']
                 },
                 'CallerReference': caller_ref
             }
         )
-        invalidation_id = response['Invalidation']['Id']
-        print(f"🚀 Invalidation submitted: {invalidation_id}")
+        print(f"🚀 전체 캐시 무효화 요청 완료: {response['Invalidation']['Id']}")
     except ClientError as e:
-        print(f"❌ Invalidation error: {e}")
+        print(f"❌ Invalidation 실패: {e}")
 
 print("\n🧹 Invalidating CloudFront cache...")
-invalidate_cloudfront(secrets['cloudfront_ID'], updated_paths)
+invalidate_cloudfront(secrets['cloudfront_ID'])
