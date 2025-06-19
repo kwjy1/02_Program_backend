@@ -27,6 +27,8 @@ def upload_to_s3(local_directory, bucket_name, s3_prefix=''):
             except ClientError as e:
                 print(f"Error uploading {local_path}: {e}")
 
+    return html_paths
+
 updated_paths = upload_to_s3('output_html', secrets['s3_bucket_name'])
 
 # CloudFront 캐시 무효화
