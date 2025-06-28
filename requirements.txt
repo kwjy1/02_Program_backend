@@ -5,3 +5,4 @@ newsapi-python
 markdown
 pandas
 boto3==1.34.34
+bs4

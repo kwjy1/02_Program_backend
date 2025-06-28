@@ -28,7 +28,7 @@ presets = {
     "자율주행": ("자율주행", "Autonomous Driving"),
     "전기차": ("전기차", "EV"),
     "UAM": ("UAM", "UAM"),
-    "우주항공해양": ("우주 기술", "aerospace technology"),
+    "우주항공해양": ("우주 기술", "Aerospace technology"),
     "차세대원자력": ("원자력", "Nuclear Energy"),
     "바이오": ("바이오", "Biotechnology"),
     "의약품": ("의약품", "Pharmaceuticals"),
