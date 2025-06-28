@@ -2,8 +2,6 @@ import os
 import toml
 import requests
 from datetime import datetime, timezone, timedelta
-import boto3
-from botocore.exceptions import ClientError
 
 import openai
 from newsapi import NewsApiClient
@@ -86,34 +84,9 @@ def get_eng_query(query_eng, start_date=start_date, end_date=end_date):
         
     return number_of_articles, articles["articles"]
 
-
-index_html = """
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>기술별 뉴스 요약</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="container py-4">
-    <h1 class="mb-4">기술별 뉴스 요약</h1>
-    <ul class="list-group">
-"""
-
 system_context = """
 You are an expert assistant for National Strategy Technology policy, you will carefully read them and produce a concise summary.
 """
-
-for tech, (_, query_eng) in presets.items():
-    index_html += f'<li class="list-group-item"><a href="{query_eng}.html">{tech} ({query_eng})</a></li>\n'
-
-index_html += """
-    </ul>
-</body>
-</html>
-"""
-
-with open(os.path.join(output_dir, "index.html"), "w", encoding="utf-8") as f:
-    f.write(index_html)
 
 for query_kor, query_eng in presets.values():
     print(f"Processing: {query_kor} / {query_eng}")

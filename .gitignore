@@ -1,2 +1,5 @@
 secret_keys.toml
 output_html/
+output_html_mobile/
+
+playground.ipynb

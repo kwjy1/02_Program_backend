@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>국가전략기술 주요 소식</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --info-gradient: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --card-hover-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            --border-radius: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 0 16px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0 0 24px 24px;
+            padding: 32px 0;
+            margin-bottom: 32px;
+            box-shadow: var(--card-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            font-size: clamp(2rem, 6vw, 3rem);
+            margin: 0;
+            text-align: center;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .header-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .tech-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .tech-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .tech-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--card-hover-shadow);
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .tech-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .tech-card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .tech-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .tech-title {
+            flex: 1;
+        }
+
+        .tech-title h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            color: #1a1a1a;
+        }
+
+        .tech-title .english {
+            font-size: 0.875rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .tech-description {
+            color: #4a5568;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 16px;
+        }
+
+        .tech-link-arrow {
+            color: #667eea;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            float: right;
+        }
+
+        .tech-card:hover .tech-link-arrow {
+            transform: translateX(4px);
+        }
+
+        /* 각 기술별 아이콘 색상 */
+        .ai { background: var(--primary-gradient); }
+        .semiconductor { background: var(--secondary-gradient); }
+        .display { background: var(--accent-gradient); }
+        .battery { background: var(--success-gradient); }
+        .autonomous { background: var(--warning-gradient); }
+        .ev { background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%); }
+        .uam { background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%); }
+        .aerospace { background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); }
+        .nuclear { background: linear-gradient(135deg, #fd79a8 0%, #fdcb6e 100%); }
+        .bio { background: linear-gradient(135deg, #00b894 0%, #00cec9 100%); }
+        .pharma { background: linear-gradient(135deg, #e17055 0%, #fab1a0 100%); }
+        .health { background: linear-gradient(135deg, #0984e3 0%, #74b9ff 100%); }
+        .hydrogen { background: linear-gradient(135deg, #00cec9 0%, #55efc4 100%); }
+        .cyber { background: linear-gradient(135deg, #2d3436 0%, #636e72 100%); }
+        .network { background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%); }
+        .robot { background: linear-gradient(135deg, #fd79a8 0%, #e84393 100%); }
+        .quantum { background: var(--info-gradient); }
+
+        .floating-element {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 56px;
+            height: 56px;
+            background: var(--accent-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.3);
+            z-index: 1000;
+        }
+
+        .floating-element:hover {
+            transform: scale(1.1);
+            box-shadow: 0 12px 35px rgba(79, 172, 254, 0.4);
+        }
+
+        .stats-bar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-bottom: 32px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 12px;
+            }
+            
+            .header {
+                padding: 24px 0;
+                margin-bottom: 24px;
+            }
+            
+            .tech-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .tech-card {
+                padding: 20px;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 16px;
+                padding: 16px;
+            }
+            
+            .floating-element {
+                bottom: 16px;
+                right: 16px;
+                width: 48px;
+                height: 48px;
+                font-size: 18px;
+            }
+            
+            .header h1 {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            .header-icon {
+                width: 48px;
+                height: 48px;
+                font-size: 20px;
+            }
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tech-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .tech-card:nth-child(1) { animation-delay: 0.05s; }
+        .tech-card:nth-child(2) { animation-delay: 0.10s; }
+        .tech-card:nth-child(3) { animation-delay: 0.15s; }
+        .tech-card:nth-child(4) { animation-delay: 0.20s; }
+        .tech-card:nth-child(5) { animation-delay: 0.25s; }
+        .tech-card:nth-child(6) { animation-delay: 0.30s; }
+        .tech-card:nth-child(7) { animation-delay: 0.35s; }
+        .tech-card:nth-child(8) { animation-delay: 0.40s; }
+        .tech-card:nth-child(9) { animation-delay: 0.45s; }
+        .tech-card:nth-child(10) { animation-delay: 0.50s; }
+        .tech-card:nth-child(11) { animation-delay: 0.55s; }
+        .tech-card:nth-child(12) { animation-delay: 0.60s; }
+        .tech-card:nth-child(13) { animation-delay: 0.65s; }
+        .tech-card:nth-child(14) { animation-delay: 0.70s; }
+        .tech-card:nth-child(15) { animation-delay: 0.75s; }
+        .tech-card:nth-child(16) { animation-delay: 0.80s; }
+        .tech-card:nth-child(17) { animation-delay: 0.85s; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>
+                <div class="header-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                국가전략기술 주요소식<br>{{ today }}
+            </h1>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <div class="tech-grid">
+            <a href="AI.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon ai">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>AI</h3>
+                        <div class="english">Artificial Intelligence</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Semiconductor.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon semiconductor">
+                        <i class="fas fa-microchip"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>반도체</h3>
+                        <div class="english">Semiconductor</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Display.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon display">
+                        <i class="fas fa-tv"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>디스플레이</h3>
+                        <div class="english">Display</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Secondary%20Battery.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon battery">
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>이차전지</h3>
+                        <div class="english">Secondary Battery</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Autonomous%20Driving.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon autonomous">
+                        <i class="fas fa-car"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>자율주행</h3>
+                        <div class="english">Autonomous Driving</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="EV.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon ev">
+                        <i class="fas fa-charging-station"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>전기차</h3>
+                        <div class="english">Electric Vehicle</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="UAM.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon uam">
+                        <i class="fas fa-helicopter"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>UAM</h3>
+                        <div class="english">Urban Air Mobility</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="aerospace%20technology.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon aerospace">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>우주항공해양</h3>
+                        <div class="english">Aerospace Technology</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Nuclear%20Energy.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon nuclear">
+                        <i class="fas fa-atom"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>차세대원자력</h3>
+                        <div class="english">Nuclear Energy</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Biotechnology.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon bio">
+                        <i class="fas fa-dna"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>바이오</h3>
+                        <div class="english">Biotechnology</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Pharmaceuticals.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon pharma">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>의약품</h3>
+                        <div class="english">Pharmaceuticals</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Digital%20Health.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon health">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>디지털헬스</h3>
+                        <div class="english">Digital Health</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Hydrogen.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon hydrogen">
+                        <i class="fas fa-wind"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>수소</h3>
+                        <div class="english">Hydrogen</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Cybersecurity.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon cyber">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>사이버보안</h3>
+                        <div class="english">Cybersecurity</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="6G.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon network">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>6G</h3>
+                        <div class="english">6th Generation</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Robotics.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon robot">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>로봇</h3>
+                        <div class="english">Robotics</div>
+                    </div>
+                </div>
+            </a>
+
+            <a href="Quantum.html" class="tech-card">
+                <div class="tech-card-header">
+                    <div class="tech-icon quantum">
+                        <i class="fas fa-cube"></i>
+                    </div>
+                    <div class="tech-title">
+                        <h3>양자</h3>
+                        <div class="english">Quantum Technology</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="floating-element" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
