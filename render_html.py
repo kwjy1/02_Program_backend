@@ -73,5 +73,5 @@ for name_eng, (name_kor, icon) in presets.items():
             "articles": articles
         })
 
-    with open(f'./output_html_mobile/{name_eng}_test.html', 'w', encoding='utf-8') as f:
+    with open(f'./output_html_mobile/{name_eng}.html', 'w', encoding='utf-8') as f:
         f.write(template.render(topics=topics, tech=tech))
