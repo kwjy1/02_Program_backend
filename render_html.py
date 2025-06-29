@@ -1,4 +1,5 @@
 import datetime
+import pytz
 import os
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
@@ -13,7 +14,7 @@ env = Environment(loader=file_loader)
 template = env.get_template('index.html')
 
 data = {
-    "today": datetime.datetime.now().strftime("%Y.%m.%d.")
+    "today": datetime.datetime.now(pytz.timezone('Asia/Seoul')).strftime("%Y.%m.%d.")
 }
 
 with open('./output_html_mobile/index.html', 'w', encoding='utf-8') as f:
