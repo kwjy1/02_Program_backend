@@ -48,7 +48,7 @@ def get_kor_query(query_kor, days=1, display=100, sort='sim'):
     naver_url = "https://openapi.naver.com/v1/search/news.json"
     headers = {
         "X-Naver-Client-Id": api_key_naver_client_id,
-        "X-Naver-Client-Secret":api_key_naver_client_secret
+        "X-Naver-Client-Secret": api_key_naver_client_secret
     }
     params = {
         "query": query_kor,
@@ -57,17 +57,14 @@ def get_kor_query(query_kor, days=1, display=100, sort='sim'):
         "sort": sort
     }
     response = requests.get(naver_url, headers=headers, params=params).json().get("items", [])
-    
-    # Remove duplicates based on the link
     unique = {it["link"]: it for it in response}.values()
 
     now_utc = datetime.now(timezone.utc)
     recent_naver = [
         it for it in unique
-        if (datetime.strptime(it["pubDate"], "%a, %d %b %Y %H:%M:%S %z").astimezone(timezone.utc) - now_utc).total_seconds() <= days * 24 * 3600
+        if 0 <= (now_utc - datetime.strptime(it["pubDate"], "%a, %d %b %Y %H:%M:%S %z").astimezone(timezone.utc)).total_seconds() <= days * 24 * 3600
     ]
-
-    return len(recent_naver) , recent_naver
+    return len(recent_naver), recent_naver
 
 def get_eng_query(query_eng, start_date=start_date, end_date=end_date):
     newasapi = NewsApiClient(api_key=api_key_newsapi)
