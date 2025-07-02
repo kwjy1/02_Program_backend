@@ -38,6 +38,7 @@ presets = {
     "Cybersecurity": ("사이버보안", "fas fa-shield-alt"),
     "6G": ("6G", "fas fa-wifi"),
     "Robotics": ("로봇", "fas fa-robot"),
+    "Manufacturing": ("AI 제조", "fas fa-industry"),
     "Quantum": ("양자", "fas fa-cube"),
 }
 

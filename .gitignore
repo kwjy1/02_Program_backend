@@ -1,5 +1,7 @@
 secret_keys.toml
+playground.ipynb
+receiverList.csv
+receiverList_kistep.csv
+
 output_html/
 output_html_mobile/
-
-playground.ipynb

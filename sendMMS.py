@@ -49,7 +49,7 @@ def main():
         return
 
     # Sample message - Replace this with your actual message
-    message = "안녕하세요! 테스트 메시지입니다."
+    message = f"안녕하세요! 테스트 메시지입니다.\nhttps://dltu8ysgreh8d.cloudfront.net"
 
     # Send SMS
     try:

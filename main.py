@@ -37,6 +37,7 @@ presets = {
     "사이버보안": ("사이버보안", "Cybersecurity"),
     "6G": ("6G", "6G"),
     "로봇": ("로봇", "Robotics"),
+    "제조": ("로봇 제조", "AI manufacturing"),
     "양자": ("양자", "Quantum"),
 }
 
