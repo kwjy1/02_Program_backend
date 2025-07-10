@@ -3,5 +3,6 @@
 - Contact 주경원(전략기술정책센터), `kwjoo@kistep.re.kr`
 
 ### TODOs
-- [ ] Tech 리스트 별도 파일로 뺄 것
-- [ ] 
+- [ ] 날짜별 archiving
+- [ ] AI 제조 아이콘 배경 (`index.html`)
+- [ ] 일부만 기술만 다시 돌리는 기능
