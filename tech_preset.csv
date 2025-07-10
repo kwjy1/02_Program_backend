@@ -1,0 +1,19 @@
+index,query_kor,query_eng,description,icon
+1,AI,AI,Artificial Intelligence,fas fa-brain
+2,반도체,Semiconductor,Semiconductor,fas fa-microchip
+3,디스플레이,Display,Display,fas fa-tv
+4,이차전지,Secondary Battery,Secondary Battery,fas fa-battery-half
+5,자율주행,Autonomous Driving,Autonomous Driving,fas fa-car
+6,전기차,EV,Electric Vehicle,fas fa-charging-station
+7,UAM,UAM,Urban Air Mobility,fas fa-helicopter
+8,우주 기술,Aerospace Technology,Aerospace Technology,fas fa-rocket
+9,원자력,Nuclear Energy,Nuclear Energy,fas fa-atom
+10,바이오,Biotechnology,Biotechnology,fas fa-dna
+11,의약품,Pharmaceuticals,Pharmaceuticals,fas fa-pills
+12,디지털 헬스,Digital Health,Digital Health,fas fa-heartbeat
+13,수소,Hydrogen,Hydrogen,fas fa-wind
+14,사이버보안,Cybersecurity,Cybersecurity,fas fa-shield-alt
+15,6G,6G,6th Generation Mobile Networks,fas fa-wifi
+16,로봇,Robotics,Robotics,fas fa-robot
+17,로봇 제조,AI Manufacturing,AI Manufacturing,fas fa-gears
+18,양자,Quantum,Quantum,fas fa-cube

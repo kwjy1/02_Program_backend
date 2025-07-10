@@ -1,6 +1,7 @@
 import datetime
 import pytz
 import os
+import pandas as pd
 from bs4 import BeautifulSoup
 from jinja2 import Environment, FileSystemLoader
 
@@ -20,35 +21,15 @@ data = {
 with open('./output_html_mobile/index.html', 'w', encoding='utf-8') as f:
     f.write(template.render(data))
 
-
-presets = {
-    "AI": ("AI", "fas fa-robot"),
-    "Semiconductor": ("반도체", "fas fa-microchip"),
-    "Display": ("디스플레이", "fas fa-tv"),
-    "Secondary Battery": ("이차전지", "fas fa-battery-half"),
-    "Autonomous Driving": ("자율주행", "fas fa-car"),
-    "EV": ("전기차", "fas fa-charging-station"),
-    "UAM": ("UAM", "fas fa-helicopter"),
-    "Aerospace Technology": ("우주 기술", "fas fa-rocket"),
-    "Nuclear Energy": ("원자력", "fas fa-atom"),
-    "Biotechnology": ("바이오", "fas fa-dna"),
-    "Pharmaceuticals": ("의약품", "fas fa-pills"),
-    "Digital Health": ("디지털 헬스", "fas fa-heartbeat"),
-    "Hydrogen": ("수소", "fas fa-wind"),
-    "Cybersecurity": ("사이버보안", "fas fa-shield-alt"),
-    "6G": ("6G", "fas fa-wifi"),
-    "Robotics": ("로봇", "fas fa-robot"),
-    "Manufacturing": ("AI 제조", "fas fa-industry"),
-    "Quantum": ("양자", "fas fa-cube"),
-}
+techs = pd.read_csv("tech_preset.csv", index_col=0)
 
 template = env.get_template('contents.html')
 
 
-for name_eng, (name_kor, icon) in presets.items():
+for fname, tname, icon in zip(techs['query_eng'], techs['query_kor'], techs['icon']):
 
-    tech = {'name': name_kor, 'icon': icon}
-    with open(f'./output_html/{name_eng}.html', encoding='utf-8') as file:
+    tech = {'name': tname, 'icon': icon}
+    with open(f'./output_html/{fname}.html', encoding='utf-8') as file:
         soup = BeautifulSoup(file, 'html.parser')
 
         h2_all = soup.find_all('h2')
@@ -57,17 +38,47 @@ for name_eng, (name_kor, icon) in presets.items():
 
     for h2 in h2_all:
         topic_name = h2.get_text(strip=True).replace('Topic ', '').split(':', 1)[-1].strip()
-        summary_p = h2.find_next('p')
-        summary = summary_p.get_text(strip=True).replace('Summary:', '') if summary_p else ""
-
-        # 기사 <a> 태그들은 Summary 다음 <p>에 있음
-        article_p = summary_p.find_next_sibling('p') if summary_p else None
+        summary = ""
         articles = []
-        if article_p:
-            for a in article_p.find_all('a'):
-                title = a.get_text(strip=True)
-                url = a.get('href')
-                articles.append({"title": title, "url": url})
+
+        # h2 다음에 나오는 <p> 태그들(최대 2개)만 조사
+        p_tags = []
+        next_tag = h2
+        while len(p_tags) < 2:
+            next_tag = next_tag.find_next_sibling()
+            if next_tag is None or next_tag.name == 'h2':
+                break
+            if next_tag.name == 'p':
+                p_tags.append(next_tag)
+
+        # 각 <p>에서 summary/articles 추출
+        for p in p_tags:
+            # Summary 추출
+            summary_strong = p.find('strong', string=lambda s: s and 'Summary' in s)
+            if summary_strong and not summary:
+                summary_text = ""
+                for sib in summary_strong.next_siblings:
+                    if getattr(sib, 'name', None) == 'br':
+                        continue
+                    if isinstance(sib, str):
+                        summary_text = sib.strip()
+                        if summary_text:
+                            break
+                summary = summary_text.lstrip(':').strip() if summary_text else ""
+            # Articles 추출
+            articles_strong = p.find('strong', string=lambda s: s and 'Articles' in s)
+            if articles_strong:
+                for sib in articles_strong.next_siblings:
+                    if getattr(sib, 'name', None) == 'a':
+                        title = sib.get_text(strip=True)
+                        url = sib.get('href')
+                        articles.append({"title": title, "url": url})
+                # 혹시 <a>가 없으면 <a> 전부 추가
+                if not articles:
+                    for a in p.find_all('a'):
+                        title = a.get_text(strip=True)
+                        url = a.get('href')
+                        articles.append({"title": title, "url": url})
 
         topics.append({
             "name": topic_name,
@@ -75,5 +86,5 @@ for name_eng, (name_kor, icon) in presets.items():
             "articles": articles
         })
 
-    with open(f'./output_html_mobile/{name_eng}.html', 'w', encoding='utf-8') as f:
+    with open(f'./output_html_mobile/{fname}.html', 'w', encoding='utf-8') as f:
         f.write(template.render(topics=topics, tech=tech))

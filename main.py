@@ -1,6 +1,7 @@
 import os
 import toml
 import requests
+import pandas as pd
 from datetime import datetime, timezone, timedelta
 
 import openai
@@ -18,28 +19,6 @@ openai.api_key = secrets["api_key_openai"]
 api_key_newsapi = secrets["api_key_newsapi"]
 api_key_naver_client_id = secrets["api_key_naver_client_id"]
 api_key_naver_client_secret = secrets["api_key_naver_client_secret"]
-
-# Define the technology presets with their Korean and English names
-presets = {
-    "AI": ("AI", "AI"),
-    "반도체": ("반도체", "Semiconductor"),
-    "디스플레이": ("디스플레이", "Display"),
-    "이차전지": ("이차전지", "Secondary Battery"),
-    "자율주행": ("자율주행", "Autonomous Driving"),
-    "전기차": ("전기차", "EV"),
-    "UAM": ("UAM", "UAM"),
-    "우주항공해양": ("우주 기술", "Aerospace Technology"),
-    "차세대원자력": ("원자력", "Nuclear Energy"),
-    "바이오": ("바이오", "Biotechnology"),
-    "의약품": ("의약품", "Pharmaceuticals"),
-    "디지털헬스": ("디지털 헬스", "Digital Health"),
-    "수소": ("수소", "Hydrogen"),
-    "사이버보안": ("사이버보안", "Cybersecurity"),
-    "6G": ("6G", "6G"),
-    "로봇": ("로봇", "Robotics"),
-    "제조": ("로봇 제조", "AI manufacturing"),
-    "양자": ("양자", "Quantum"),
-}
 
 # Set the date range for news articles
 start_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -86,7 +65,9 @@ system_context = """
 You are an expert assistant for National Strategy Technology policy, you will carefully read them and produce a concise summary.
 """
 
-for query_kor, query_eng in presets.values():
+techs = pd.read_csv("tech_preset.csv", index_col=0)
+
+for query_kor, query_eng, desc in zip(techs['query_kor'], techs['query_eng'], techs['description']):
     print(f"Processing: {query_kor} / {query_eng}")
     number_of_article_kor, article_kor = get_kor_query(query_kor, days=1, display=100, sort='sim')
     number_of_article_eng, article_eng = get_eng_query(query_eng, start_date=start_date, end_date=end_date)
@@ -96,7 +77,7 @@ for query_kor, query_eng in presets.values():
         # print(type(article))
         # print(article['link'])
         articles_text += (
-            f"{i}. Title: {article['title']}\n"
+            f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
             f"   Description: {article['description']}\n"
             f"   URL: {article['link']}\n\n"
         )
@@ -104,21 +85,22 @@ for query_kor, query_eng in presets.values():
 
     for i, article in enumerate(article_eng, count):
         articles_text += (
-            f"{i}. Title: {article['title']}\n"
+            f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
             f"   Description: {article['description']}\n"
             f"   URL: {article['url']}\n\n"
         )
 
     prompt = f"""
-Group the news articles below into 3~5 major issues (depending on the number of articles) and summarize each issue.
-Use a mix of Korean and international news, and you can exclude unnecessary articles.
+Group the news articles below into 2~5 major issues (depending on the number of articles) and summarize each issue.
+Issues should be distinct and not overlap.
+Use a mix of Korean and international news
 
 0. Be written in KOREAN
-1. **Topic Title**: 10-20 words.
-2. **Summary**: 4-5 sentence overview of the core theme and some specific content that article says.
-3. **Articles**: Markdown list of titles with URLs. and remove duplicate(or similar) articles
+1. Topic Title: 10-20 words.
+2. Summary: 4-5 sentence overview of the core theme and some specific content that article says.
+3. Articles: Markdown list of titles with URLs. 
 
-Format exactly like this:
+Format MUST BE EXACTLY like this Markdown template:
 
 ## Topic 1: <Topic Title>
 **Summary:** ... \n
@@ -126,8 +108,18 @@ Format exactly like this:
 - [Title A](URL) \n
 - [Title B](URL) \n
 
+## Topic 2: <Topic Title>
+**Summary:** ... \n
+**Articles:**
+- [Title C](URL) \n
+- [Title D](URL) \n
+
+From here on, you will only use the articles below to summarize.
 Articles:
 {articles_text}
+
+They are news articles related to {desc}. So you MUST exclude not related to {desc} or unnecessary, or duplicated articles.
+For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
 """
  
     response = openai.ChatCompletion.create(
@@ -144,23 +136,20 @@ Articles:
         }
     )
 
-    result = {}
-    result['query_eng'] = markdown_content = response.choices[0].message.content.strip()
-
-    html_body = markdown.markdown(markdown_content, extensions=['nl2br'])
+    html_body = markdown.markdown(response.choices[0].message.content.strip(), extensions=['nl2br'])
     html = f"""
-    <html>
-    <head>
-        <meta charset="utf-8">
-        <title>{query_eng} 뉴스 요약</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head>
-    <body class="container py-4">
-        <h1 class="mb-4">{query_eng} 뉴스 요약</h1>
-        <a href="index.html" class="btn btn-secondary mb-3">← 메인으로</a>
-        <div class="card p-4">{html_body}</div>
-    </body>
-    </html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{query_eng} 뉴스 요약</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="container py-4">
+    <h1 class="mb-4">{query_eng} 뉴스 요약</h1>
+    <a href="index.html" class="btn btn-secondary mb-3">← 메인으로</a>
+    <div class="card p-4">{html_body}</div>
+</body>
+</html>
     """
     with open(os.path.join(output_dir, f"{query_eng}.html"), "w", encoding="utf-8") as f:
         f.write(html)
