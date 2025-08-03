@@ -5,6 +5,8 @@ import toml
 from botocore.exceptions import ClientError
 from datetime import datetime
 
+today_str = datetime.now().strftime("%Y-%m-%d")
+
 with open("secret_keys.toml", "r", encoding="utf-8") as f:
     secrets = toml.load(f)
 
@@ -26,6 +28,8 @@ def upload_to_s3(local_directory, bucket_name, s3_prefix=''):
                 print(f"Error uploading {local_path}: {e}")
 
 updated_paths = upload_to_s3('output_html_mobile', secrets['s3_bucket_name'])
+
+upload_to_s3('output_html_mobile', secrets['s3_bucket_name'], s3_prefix=today_str)
 
 # CloudFront 캐시 무효화
 def invalidate_cloudfront(distribution_id):

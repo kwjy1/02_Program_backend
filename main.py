@@ -3,6 +3,7 @@ import toml
 import requests
 import pandas as pd
 from datetime import datetime, timezone, timedelta
+import argparse
 
 import openai
 from newsapi import NewsApiClient
@@ -65,32 +66,42 @@ system_context = """
 You are an expert assistant for National Strategy Technology policy, you will carefully read them and produce a concise summary.
 """
 
-techs = pd.read_csv("tech_preset.csv", index_col=0)
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--tech", type=str, default=None, help="콤마로 구분된 기술명(영문)만 처리 (예: AI,Display)")
+    args = parser.parse_args()
 
-for query_kor, query_eng, desc in zip(techs['query_kor'], techs['query_eng'], techs['description']):
-    print(f"Processing: {query_kor} / {query_eng}")
-    number_of_article_kor, article_kor = get_kor_query(query_kor, days=1, display=100, sort='sim')
-    number_of_article_eng, article_eng = get_eng_query(query_eng, start_date=start_date, end_date=end_date)
+    techs = pd.read_csv("tech_preset.csv", index_col=0)
 
-    articles_text = ""
-    for i, article in enumerate(article_kor, 1):
-        # print(type(article))
-        # print(article['link'])
-        articles_text += (
-            f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
-            f"   Description: {article['description']}\n"
-            f"   URL: {article['link']}\n\n"
-        )
-        count = i
+    # --tech 인자가 있으면 해당 기술만 처리
+    if args.tech:
+        tech_list = [t.strip() for t in args.tech.split(",")]
+        techs = techs[techs.index.isin(tech_list) | techs['query_eng'].isin(tech_list)]
 
-    for i, article in enumerate(article_eng, count):
-        articles_text += (
-            f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
-            f"   Description: {article['description']}\n"
-            f"   URL: {article['url']}\n\n"
-        )
+    for query_kor, query_eng, desc in zip(techs['query_kor'], techs['query_eng'], techs['description']):
+        print(f"Processing: {query_kor} / {query_eng}")
+        number_of_article_kor, article_kor = get_kor_query(query_kor, days=1, display=100, sort='sim')
+        number_of_article_eng, article_eng = get_eng_query(query_eng, start_date=start_date, end_date=end_date)
 
-    prompt = f"""
+        articles_text = ""
+        for i, article in enumerate(article_kor, 1):
+            # print(type(article))
+            # print(article['link'])
+            articles_text += (
+                f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
+                f"   Description: {article['description']}\n"
+                f"   URL: {article['link']}\n\n"
+            )
+            count = i
+
+        for i, article in enumerate(article_eng, count):
+            articles_text += (
+                f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
+                f"   Description: {article['description']}\n"
+                f"   URL: {article['url']}\n\n"
+            )
+
+        prompt = f"""
 Group the news articles below into 2~5 major issues (depending on the number of articles) and summarize each issue.
 Issues should be distinct and not overlap.
 Use a mix of Korean and international news
@@ -122,22 +133,22 @@ They are news articles related to {desc}. So you MUST exclude not related to {de
 For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
 """
  
-    response = openai.ChatCompletion.create(
-        model = "gpt-4.1",
-        messages = [{"role": "system", "content": system_context},
-                    {"role": "user", "content": prompt}],
-        temperature=0.2,
-        max_tokens=32768,
-        top_p=1,
-        frequency_penalty=0,
-        presence_penalty=0,
-        response_format={
-            "type": "text"
-        }
-    )
+        response = openai.ChatCompletion.create(
+            model = "gpt-4.1-mini",
+            messages = [{"role": "system", "content": system_context},
+                        {"role": "user", "content": prompt}],
+            temperature=0.2,
+            max_tokens=32768,
+            top_p=1,
+            frequency_penalty=0,
+            presence_penalty=0,
+            response_format={
+                "type": "text"
+            }
+        )
 
-    html_body = markdown.markdown(response.choices[0].message.content.strip(), extensions=['nl2br'])
-    html = f"""
+        html_body = markdown.markdown(response.choices[0].message.content.strip(), extensions=['nl2br'])
+        html = f"""
 <html>
 <head>
     <meta charset="utf-8">
@@ -150,6 +161,6 @@ For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
     <div class="card p-4">{html_body}</div>
 </body>
 </html>
-    """
-    with open(os.path.join(output_dir, f"{query_eng}.html"), "w", encoding="utf-8") as f:
-        f.write(html)
+        """
+        with open(os.path.join(output_dir, f"{query_eng}.html"), "w", encoding="utf-8") as f:
+            f.write(html)
