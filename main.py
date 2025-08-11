@@ -134,7 +134,7 @@ For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
 """
  
         response = openai.ChatCompletion.create(
-            model = "gpt-4.1-mini",
+            model = "gpt-5",
             messages = [{"role": "system", "content": system_context},
                         {"role": "user", "content": prompt}],
             temperature=0.2,
