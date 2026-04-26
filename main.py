@@ -5,7 +5,7 @@ import pandas as pd
 from datetime import datetime, timezone, timedelta
 import argparse
 
-import openai
+from openai import OpenAI
 from newsapi import NewsApiClient
 import markdown
 
@@ -16,7 +16,8 @@ with open("secret_keys.toml", "r", encoding="utf-8") as f:
 output_dir = "output_html"
 os.makedirs(output_dir, exist_ok=True)
 
-openai.api_key = secrets["api_key_openai"]
+openai_client = OpenAI(api_key=secrets["api_key_openai"])
+OPENAI_MODEL = "gpt-5.4"
 api_key_newsapi = secrets["api_key_newsapi"]
 api_key_naver_client_id = secrets["api_key_naver_client_id"]
 api_key_naver_client_secret = secrets["api_key_naver_client_secret"]
@@ -133,22 +134,17 @@ They are news articles related to {desc}. So you MUST exclude not related to {de
 For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
 """
  
-        response = openai.ChatCompletion.create(
-            model = "gpt-4.1",
-            messages = [{"role": "system", "content": system_context},
-                        {"role": "user", "content": prompt}],
+        response = openai_client.responses.create(
+            model=OPENAI_MODEL,
+            input=[
+                {"role": "system", "content": system_context},
+                {"role": "user", "content": prompt},
+            ],
             temperature=0.2,
-            max_tokens=32768,
-            # max_completion_tokens=32768,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0,
-            response_format={
-                "type": "text"
-            }
+            max_output_tokens=32768,
         )
 
-        html_body = markdown.markdown(response.choices[0].message.content.strip(), extensions=['nl2br'])
+        html_body = markdown.markdown(response.output_text.strip(), extensions=['nl2br'])
         html = f"""
 <html>
 <head>
