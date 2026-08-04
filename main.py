@@ -17,7 +17,9 @@ output_dir = "output_html"
 os.makedirs(output_dir, exist_ok=True)
 
 openai_client = OpenAI(api_key=secrets["api_key_openai"])
-OPENAI_MODEL = "gpt-5.4"
+OPENAI_MODEL = "gpt-5.6-sol"
+NEWSAPI_PAGE_SIZE = 100
+NEWSAPI_MAX_PAGES = 2
 api_key_newsapi = secrets["api_key_newsapi"]
 api_key_naver_client_id = secrets["api_key_naver_client_id"]
 api_key_naver_client_secret = secrets["api_key_naver_client_secret"]
@@ -49,19 +51,34 @@ def get_kor_query(query_kor, days=1, display=100, sort='sim'):
     return len(recent_naver), recent_naver
 
 def get_eng_query(query_eng, start_date=start_date, end_date=end_date):
-    newasapi = NewsApiClient(api_key=api_key_newsapi)
+    newsapi = NewsApiClient(api_key=api_key_newsapi)
 
     params = {
         "q": query_eng,
         "from_param": start_date,
         "to": end_date,
-        "page_size": 100,
+        "sort_by": "relevancy",
+        "page_size": NEWSAPI_PAGE_SIZE,
     }
 
-    articles = newasapi.get_everything(**params)
-    number_of_articles = articles["totalResults"]
-        
-    return number_of_articles, articles["articles"]
+    first_page = newsapi.get_everything(**params, page=1)
+    number_of_articles = first_page["totalResults"]
+    collected_articles = list(first_page["articles"])
+
+    if number_of_articles > NEWSAPI_PAGE_SIZE and NEWSAPI_MAX_PAGES >= 2:
+        second_page = newsapi.get_everything(**params, page=2)
+        collected_articles.extend(second_page["articles"])
+
+    # Keep the first (most relevant) occurrence of duplicated URLs across pages.
+    unique_articles = []
+    seen_urls = set()
+    for article in collected_articles:
+        if article["url"] in seen_urls:
+            continue
+        seen_urls.add(article["url"])
+        unique_articles.append(article)
+
+    return number_of_articles, unique_articles
 
 system_context = """
 You are an expert assistant for National Strategy Technology policy, you will carefully read them and produce a concise summary.
@@ -93,9 +110,7 @@ if __name__ == "__main__":
                 f"   Description: {article['description']}\n"
                 f"   URL: {article['link']}\n\n"
             )
-            count = i
-
-        for i, article in enumerate(article_eng, count):
+        for i, article in enumerate(article_eng, len(article_kor) + 1):
             articles_text += (
                 f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
                 f"   Description: {article['description']}\n"
@@ -103,14 +118,21 @@ if __name__ == "__main__":
             )
 
         prompt = f"""
-Group the news articles below into 2~5 major issues (depending on the number of articles) and summarize each issue.
-Issues should be distinct and not overlap.
-Use a mix of Korean and international news
+Select and summarize up to 5 concrete, newsworthy issues from the articles below.
 
-0. Be written in KOREAN
-1. Topic Title: 10-20 words.
-2. Summary: 4-5 sentence overview of the core theme and some specific content that article says.
-3. Articles: Markdown list of titles with URLs. 
+Selection and grouping rules:
+- First exclude articles that are unrelated to {desc}, duplicated, promotional, speculative without a concrete development, or too vague to identify what happened.
+- Each topic MUST describe one specific event or tightly connected development, such as a named organization's announcement, a particular policy or regulatory action, a funding/deal, a product or research release, or a measurable incident.
+- Group articles together only when they cover the same event or a direct follow-up to it. Sharing only a broad technology or industry category is NOT enough.
+- Never create umbrella topics such as "AI industry trends", "recent technology developments", or a miscellaneous roundup.
+- Do not force a fixed number of topics. Return only well-supported topics; omit weak leftover articles instead of merging unrelated stories.
+- Topics must not overlap. Use Korean and international sources across the report when relevant, but never sacrifice topic specificity to create that mix.
+
+Output requirements:
+0. Write entirely in KOREAN.
+1. Topic Title: identify the specific actor, action, and subject of the event in a concise title.
+2. Summary: 4-5 sentences stating what happened, who did it, why it matters, and concrete facts reported by the cited articles. Avoid generic background statements.
+3. Articles: include 2-5 of the most directly relevant, non-duplicated articles as a Markdown list of titles with URLs.
 
 Format MUST BE EXACTLY like this Markdown template:
 
@@ -130,8 +152,7 @@ From here on, you will only use the articles below to summarize.
 Articles:
 {articles_text}
 
-They are news articles related to {desc}. So you MUST exclude not related to {desc} or unnecessary, or duplicated articles.
-For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
+Use only the supplied articles. Do not invent facts, events, or URLs.
 """
  
         response = openai_client.responses.create(
@@ -140,6 +161,7 @@ For each topics, Articles SHOULD NOT be too many, just 3~5 articles per topic.
                 {"role": "system", "content": system_context},
                 {"role": "user", "content": prompt},
             ],
+            reasoning={"effort": "low"}, # none, low, medium, high
             temperature=0.2,
             max_output_tokens=32768,
         )
