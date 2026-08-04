@@ -73,12 +73,47 @@ def get_eng_query(query_eng, start_date=start_date, end_date=end_date):
     unique_articles = []
     seen_urls = set()
     for article in collected_articles:
-        if article["url"] in seen_urls:
+        if not isinstance(article, dict):
             continue
-        seen_urls.add(article["url"])
+        url = article.get("url")
+        if not url or url in seen_urls:
+            continue
+        seen_urls.add(url)
         unique_articles.append(article)
 
     return number_of_articles, unique_articles
+
+def build_articles_text(korean_articles, english_articles):
+    article_sources = (
+        (korean_articles, "title", "link"),
+        (english_articles, "title", "url"),
+    )
+    formatted_articles = []
+
+    for articles, title_key, url_key in article_sources:
+        for article in articles:
+            if not isinstance(article, dict):
+                continue
+
+            title = article.get(title_key)
+            url = article.get(url_key)
+            if not isinstance(title, str) or not title.strip() or title.strip() == "[Removed]":
+                continue
+            if not isinstance(url, str) or not url.strip():
+                continue
+
+            description = article.get("description")
+            if not isinstance(description, str):
+                description = ""
+
+            clean_title = title.replace("[", "").replace("]", "").strip()
+            formatted_articles.append(
+                f"{len(formatted_articles) + 1}. Title: {clean_title}\n"
+                f"   Description: {description.strip()}\n"
+                f"   URL: {url.strip()}\n\n"
+            )
+
+    return "".join(formatted_articles)
 
 system_context = """
 You are an expert assistant for National Strategy Technology policy, you will carefully read them and produce a concise summary.
@@ -101,21 +136,7 @@ if __name__ == "__main__":
         number_of_article_kor, article_kor = get_kor_query(query_kor, days=1, display=100, sort='sim')
         number_of_article_eng, article_eng = get_eng_query(query_eng, start_date=start_date, end_date=end_date)
 
-        articles_text = ""
-        for i, article in enumerate(article_kor, 1):
-            # print(type(article))
-            # print(article['link'])
-            articles_text += (
-                f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
-                f"   Description: {article['description']}\n"
-                f"   URL: {article['link']}\n\n"
-            )
-        for i, article in enumerate(article_eng, len(article_kor) + 1):
-            articles_text += (
-                f"{i}. Title: {article['title'].replace('[', '').replace(']', '')}\n"
-                f"   Description: {article['description']}\n"
-                f"   URL: {article['url']}\n\n"
-            )
+        articles_text = build_articles_text(article_kor, article_eng)
 
         prompt = f"""
 Select and summarize up to 5 concrete, newsworthy issues from the articles below.
@@ -155,17 +176,22 @@ Articles:
 Use only the supplied articles. Do not invent facts, events, or URLs.
 """
  
-        response = openai_client.responses.create(
-            model=OPENAI_MODEL,
-            input=[
-                {"role": "system", "content": system_context},
-                {"role": "user", "content": prompt},
-            ],
-            reasoning={"effort": "low"},  # none, low, medium, high
-            max_output_tokens=32768,
-        )
+        if articles_text:
+            response = openai_client.responses.create(
+                model=OPENAI_MODEL,
+                input=[
+                    {"role": "system", "content": system_context},
+                    {"role": "user", "content": prompt},
+                ],
+                reasoning={"effort": "low"},  # none, low, medium, high
+                max_output_tokens=32768,
+            )
+            summary_text = response.output_text.strip()
+        else:
+            print(f"No valid articles found: {query_kor} / {query_eng}")
+            summary_text = "수집된 뉴스가 없습니다."
 
-        html_body = markdown.markdown(response.output_text.strip(), extensions=['nl2br'])
+        html_body = markdown.markdown(summary_text, extensions=['nl2br'])
         html = f"""
 <html>
 <head>
