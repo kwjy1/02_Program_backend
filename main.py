@@ -161,8 +161,7 @@ Use only the supplied articles. Do not invent facts, events, or URLs.
                 {"role": "system", "content": system_context},
                 {"role": "user", "content": prompt},
             ],
-            reasoning={"effort": "low"}, # none, low, medium, high
-            temperature=0.2,
+            reasoning={"effort": "low"},  # none, low, medium, high
             max_output_tokens=32768,
         )
 
