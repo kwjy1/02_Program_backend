@@ -15,11 +15,9 @@ region_name = 'kr-standard'
 local_directory = 'output_html_mobile'
 today_str = datetime.now().strftime('%Y-%m-%d')
 
-
 def load_secrets(path='secret_keys.toml'):
     with open(path, 'r', encoding='utf-8') as f:
         return toml.load(f)
-
 
 def create_ncp_client(secrets):
     return boto3.client(
@@ -31,11 +29,9 @@ def create_ncp_client(secrets):
         config=Config(signature_version='s3v4'),
     )
 
-
 def guess_content_type(file_path):
     content_type, _ = mimetypes.guess_type(file_path)
     return content_type or 'application/octet-stream'
-
 
 def upload_to_ncp(local_directory, bucket_name, ncp_client, object_prefix=''):
     uploaded_paths = []
